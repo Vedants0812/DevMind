@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevMind — Developer Quote Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #07070f;
+      --surface: #0e0e1a;
+      --border: rgba(255,255,255,0.07);
+      --border-h: rgba(255,255,255,0.14);
+      --text: #ededf5;
+      --muted: #64647a;
+      --purple: #7c6af5;
+      --purple-light: #a78bfa;
+      --purple-glow: rgba(124,106,245,0.2);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -300px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse, rgba(124,106,245,0.10) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ── */
+    header { text-align: center; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: rgba(124,106,245,0.10);
+      border: 1px solid rgba(124,106,245,0.22);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--purple-light);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(42px, 8vw, 68px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      background: linear-gradient(140deg, #ededf5 20%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sub {
+      margin-top: 10px;
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── FILTERS ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .f-btn {
+      padding: 7px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .f-btn:hover { color: var(--text); border-color: var(--border-h); }
+    .f-btn.on {
+      background: rgba(124,106,245,0.12);
+      color: var(--purple-light);
+      border-color: rgba(124,106,245,0.30);
+    }
+
+    /* ── QUOTE CARD ── */
+    .card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 44px 40px 36px;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+    }
+    .card:hover { border-color: var(--border-h); box-shadow: 0 0 60px rgba(124,106,245,0.06); }
+
+    .big-quote {
+      font-family: 'Syne', sans-serif;
+      font-size: 100px;
+      line-height: 0.55;
+      color: var(--purple);
+      opacity: 0.2;
+      position: absolute;
+      top: 28px; left: 34px;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #quoteText {
+      font-size: clamp(16px, 2.4vw, 20px);
+      font-weight: 300;
+      line-height: 1.7;
+      color: var(--text);
+      padding-top: 24px;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    #quoteText.fade { opacity: 0; transform: translateY(8px); }
+
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .author-block { display: flex; flex-direction: column; gap: 3px; }
+    .a-name { font-size: 14px; font-weight: 600; color: var(--purple-light); }
+    .a-role { font-size: 12px; color: var(--muted); }
+
+    .cat-tag {
+      padding: 4px 13px;
+      background: rgba(124,106,245,0.09);
+      border: 1px solid rgba(124,106,245,0.18);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--purple-light);
+    }
+
+    /* ── BUTTONS ── */
+    .btns {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .btn-main {
+      flex: 1;
+      min-width: 150px;
+      padding: 14px 22px;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-main:hover { background: #6b59e0; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,106,245,0.35); }
+    .btn-main:active { transform: scale(0.97); }
+
+    .btn-sec {
+      padding: 14px 18px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border-h);
+      border-radius: 13px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-sec:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .btn-sec.done { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+
+    /* ── COUNTER ── */
+    .counter { font-size: 12px; color: var(--muted); }
+    .counter b { color: var(--purple-light); font-weight: 600; }
+
+    footer {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      opacity: 0.6;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 22px 26px; }
+      .btn-main { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+  
+    <h1>DevMind</h1>
+    <p class="sub">Wisdom for developers, curated by category.</p>
+  </header>
+
+  <div class="filters" id="filters">
+    <button class="f-btn on" data-cat="all">All</button>
+    <button class="f-btn" data-cat="mindset">Mindset</button>
+    <button class="f-btn" data-cat="code">Code</button>
+    <button class="f-btn" data-cat="career">Career</button>
+    <button class="f-btn" data-cat="debugging">Debugging</button>
+    <button class="f-btn" data-cat="learning">Learning</button>
+  </div>
+
+  <div class="card">
+    <div class="big-quote">"</div>
+    <p id="quoteText"></p>
+    <div class="card-foot">
+      <div class="author-block">
+        <span class="a-name" id="aName"></span>
+        <span class="a-role" id="aRole"></span>
+      </div>
+      <span class="cat-tag" id="catTag"></span>
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="btn-main" onclick="nextQuote()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.28-3.59"/></svg>
+      New Quote
+    </button>
+    <button class="btn-sec" id="copyBtn" onclick="copyQ()">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+    <button class="btn-sec" onclick="tweetQ()">
+      <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      Share
+    </button>
+  </div>
+
+  <p class="counter">Showing <b id="countDisplay">0</b> quotes in this category</p>
+
+  <footer>Built in 20 minutes · Day 5 of 100 Days of AI Projects</footer>
+</div>
+
+<script>
+const QUOTES = [
+  { text: "First, solve the problem. Then, write the code.", author: "John Johnson", role: "Software Architect", cat: "code" },
+  { text: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand.", author: "Martin Fowler", role: "Author & Architect", cat: "code" },
+  { text: "It's not a bug, it's an undocumented feature.", author: "Unknown Dev", role: "The Internet", cat: "debugging" },
+  { text: "The best error message is the one that never shows up.", author: "Thomas Fuchs", role: "JavaScript Developer", cat: "debugging" },
+  { text: "Debugging is twice as hard as writing the code in the first place.", author: "Brian Kernighan", role: "Computer Scientist", cat: "debugging" },
+  { text: "Programs must be written for people to read, and only incidentally for machines to execute.", author: "Harold Abelson", role: "MIT Professor", cat: "code" },
+  { text: "The most important property of a program is whether it accomplishes the intention of its user.", author: "C.A.R. Hoare", role: "Computer Scientist", cat: "code" },
+  { text: "Code is like humor. When you have to explain it, it's bad.", author: "Cory House", role: "Software Architect", cat: "code" },
+  { text: "Every great developer you know got there by solving problems they were unqualified to solve until they did it.", author: "Patrick McKenzie", role: "Software Engineer", cat: "career" },
+  { text: "The only way to go fast is to go well.", author: "Robert C. Martin", role: "Clean Code Author", cat: "mindset" },
+  { text: "Don't comment bad code — rewrite it.", author: "Brian Kernighan", role: "Computer Scientist", cat: "code" },
+  { text: "Make it work, make it right, make it fast.", author: "Kent Beck", role: "TDD Pioneer", cat: "mindset" },
+  { text: "The best way to predict the future is to build it.", author: "Alan Kay", role: "Computer Scientist", cat: "mindset" },
+  { text: "Simplicity is the soul of efficiency.", author: "Austin Freeman", role: "Author", cat: "mindset" },
+  { text: "In order to be irreplaceable, one must always be different.", author: "Coco Chanel", role: "Applied to dev careers", cat: "career" },
+  { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds", role: "Creator of Linux", cat: "code" },
+  { text: "One of the best programming skills you can have is knowing when to walk away for a while.", author: "Oscar Godson", role: "Software Engineer", cat: "debugging" },
+  { text: "Always code as if the guy who ends up maintaining your code will be a violent psychopath who knows where you live.", author: "Rick Osborne", role: "Software Engineer", cat: "code" },
+  { text: "A ship in harbor is safe, but that's not what ships are for.", author: "John A. Shedd", role: "Applied to developers", cat: "career" },
+  { text: "The impedance mismatch between what you want and what you know how to do is the biggest source of bugs.", author: "Unknown", role: "Stack Overflow", cat: "debugging" },
+  { text: "Your most unhappy customers are your greatest source of learning.", author: "Bill Gates", role: "Microsoft Founder", cat: "learning" },
+  { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci", role: "Renaissance polymath", cat: "learning" },
+  { text: "The more I learn, the more I realize how much I don't know.", author: "Albert Einstein", role: "Physicist", cat: "learning" },
+  { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin", role: "Polymath", cat: "learning" },
+  { text: "The expert in anything was once a beginner.", author: "Helen Hayes", role: "Actress", cat: "learning" },
+  { text: "It always seems impossible until it's done.", author: "Nelson Mandela", role: "Applied to shipping code", cat: "mindset" },
+  { text: "Perfection is the enemy of done.", author: "Sheryl Sandberg", role: "COO, Meta", cat: "mindset" },
+  { text: "Software is a great combination of artistry and engineering.", author: "Bill Gates", role: "Microsoft Founder", cat: "mindset" },
+  { text: "The function of good software is to make the complex appear simple.", author: "Grady Booch", role: "Software Engineer", cat: "code" },
+  { text: "If debugging is the process of removing software bugs, then programming must be the process of putting them in.", author: "Edsger Dijkstra", role: "Computer Scientist", cat: "debugging" },
+];
+
+let activeCat = 'all';
+let filtered = [...QUOTES];
+let lastIndex = -1;
+
+function getFiltered() {
+  return activeCat === 'all' ? QUOTES : QUOTES.filter(q => q.cat === activeCat);
+}
+
+function showQuote(q) {
+  const el = document.getElementById('quoteText');
+  el.classList.add('fade');
+  setTimeout(() => {
+    el.textContent = q.text;
+    document.getElementById('aName').textContent = q.author;
+    document.getElementById('aRole').textContent = q.role;
+    document.getElementById('catTag').textContent = q.cat.charAt(0).toUpperCase() + q.cat.slice(1);
+    el.classList.remove('fade');
+  }, 240);
+}
+
+function nextQuote() {
+  filtered = getFiltered();
+  let idx;
+  do { idx = Math.floor(Math.random() * filtered.length); }
+  while (idx === lastIndex && filtered.length > 1);
+  lastIndex = idx;
+  showQuote(filtered[idx]);
+}
+
+function copyQ() {
+  const q = filtered[lastIndex] || filtered[0];
+  const text = `"${q.text}" — ${q.author}`;
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('copyBtn');
+  btn.classList.add('done');
+  btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+  setTimeout(() => {
+    btn.classList.remove('done');
+    btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+  }, 2000);
+}
+
+function tweetQ() {
+  const q = filtered[lastIndex] || filtered[0];
+  const text = encodeURIComponent(`"${q.text}" — ${q.author}\n\n#DevMind #100DaysOfCode #Programming`);
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+document.getElementById('filters').addEventListener('click', e => {
+  const btn = e.target.closest('.f-btn');
+  if (!btn) return;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  activeCat = btn.dataset.cat;
+  filtered = getFiltered();
+  document.getElementById('countDisplay').textContent = filtered.length;
+  nextQuote();
+});
+
+// Init
+filtered = getFiltered();
+document.getElementById('countDisplay').textContent = filtered.length;
+nextQuote();
+</script>
+</body>
+</html>
